@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Subscriber Usage</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&display=swap">
+  <style>
+    :root {
+      --bg: #F3F5F4;
+      --surface: #FFFFFF;
+      --ink: #16232F;
+      --muted: #5F6E7A;
+      --line: #D8DEDD;
+      --line-soft: #EDF1F0;
+      --accent: #0B6E75;
+      --accent-soft: #D6EBEC;
+      --error: #A8402A;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 16px;
+      padding: 20px clamp(16px, 4vw, 40px);
+      background: var(--surface);
+      border-bottom: 1px solid var(--line);
+    }
+
+    h1 { margin: 0; font-size: 1.25rem; font-weight: 600; letter-spacing: -0.01em; }
+    h2 { margin: 0 0 16px; font-size: 1rem; font-weight: 600; }
+
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.875rem;
+    }
+    .status .dot { width: 8px; height: 8px; border-radius: 50%; background: #9AA5AE; }
+    .status[data-ok="true"] .dot { background: var(--accent); }
+    .status[data-ok="false"] .dot { background: var(--error); }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(260px, 320px) 1fr;
+      gap: 32px;
+      align-items: start;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px clamp(16px, 4vw, 40px);
+    }
+
+    .panel {
+      position: sticky;
+      top: 24px;
+      padding: 24px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+    }
+
+    .field { margin-bottom: 14px; }
+    .field-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+      gap: 10px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--muted);
+      font-size: 0.8125rem;
+      font-weight: 500;
+    }
+
+    input {
+      width: 100%;
+      padding: 8px 10px;
+      font: inherit;
+      font-variant-numeric: tabular-nums;
+      color: var(--ink);
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+    }
+    input:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+      border-color: var(--accent);
+    }
+
+    button {
+      padding: 9px 16px;
+      font: inherit;
+      font-weight: 600;
+      color: #fff;
+      background: var(--accent);
+      border: 1px solid var(--accent);
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button.secondary { color: var(--ink); background: transparent; border-color: var(--line); }
+    button:disabled { opacity: 0.6; cursor: progress; }
+    button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+    .panel button { width: 100%; }
+
+    .form-msg { min-height: 1.5em; margin: 4px 0 12px; font-size: 0.875rem; }
+    .form-msg.error { color: var(--error); }
+    .form-msg.ok { color: var(--accent); }
+
+    .records-head {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: end;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .records-head h2 { margin: 0; }
+
+    .filters { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; }
+    .filters .field { margin: 0; }
+    .filters input { width: auto; }
+    .filters #f-subscriber { width: 120px; }
+
+    .table-wrap {
+      overflow-x: auto;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      font-variant-numeric: tabular-nums;
+    }
+    th {
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--muted);
+      white-space: nowrap;
+      border-bottom: 1px solid var(--line);
+    }
+    td { padding: 10px 16px; white-space: nowrap; border-bottom: 1px solid var(--line-soft); }
+    th.num, td.num { text-align: right; }
+    td.id { color: var(--muted); }
+    tbody tr:hover { background: #F7FAF9; }
+
+    td.data { min-width: 150px; }
+    .data-value { display: block; text-align: right; }
+    .track { height: 4px; margin-top: 4px; background: var(--accent-soft); border-radius: 2px; }
+    .bar { height: 100%; min-width: 2px; background: var(--accent); border-radius: 2px; }
+
+    tfoot td { font-weight: 600; background: #F7FAF9; border-top: 1px solid var(--line); border-bottom: none; }
+
+    .empty { margin: 0; padding: 32px 16px; text-align: center; color: var(--muted); }
+
+    @media (max-width: 860px) {
+      .layout { grid-template-columns: 1fr; }
+      .panel { position: static; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <h1>Subscriber Usage</h1>
+    <p class="status" id="status" role="status">
+      <span class="dot" aria-hidden="true"></span>
+      <span id="status-text">Checking API…</span>
+    </p>
+  </header>
+
+  <main class="layout">
+    <section class="panel" aria-labelledby="record-title">
+      <h2 id="record-title">Record usage</h2>
+      <form id="usage-form" novalidate>
+        <div class="field">
+          <label for="subscriberId">Subscriber ID</label>
+          <input id="subscriberId" name="subscriberId" placeholder="SUB01" autocomplete="off" required>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="callMinutes">Call minutes</label>
+            <input id="callMinutes" name="callMinutes" type="number" min="0" step="1" inputmode="numeric">
+          </div>
+          <div class="field">
+            <label for="smsCount">SMS count</label>
+            <input id="smsCount" name="smsCount" type="number" min="0" step="1" inputmode="numeric">
+          </div>
+          <div class="field">
+            <label for="dataUsageMB">Data (MB)</label>
+            <input id="dataUsageMB" name="dataUsageMB" type="number" min="0" step="any" inputmode="decimal">
+          </div>
+        </div>
+        <p class="form-msg" id="form-msg" aria-live="polite"></p>
+        <button type="submit" id="submit-btn">Record usage</button>
+      </form>
+    </section>
+
+    <section aria-labelledby="records-title">
+      <div class="records-head">
+        <h2 id="records-title">Usage records</h2>
+        <form id="filter-form" class="filters">
+          <div class="field">
+            <label for="f-subscriber">Subscriber</label>
+            <input id="f-subscriber" name="subscriberId" placeholder="Any">
+          </div>
+          <div class="field">
+            <label for="f-from">From (WIB)</label>
+            <input id="f-from" name="from" type="datetime-local">
+          </div>
+          <div class="field">
+            <label for="f-to">To (WIB)</label>
+            <input id="f-to" name="to" type="datetime-local">
+          </div>
+          <button type="submit">Apply filters</button>
+          <button type="reset" class="secondary">Clear</button>
+        </form>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">ID</th>
+              <th scope="col">Subscriber</th>
+              <th scope="col" class="num">Call min</th>
+              <th scope="col" class="num">SMS</th>
+              <th scope="col" class="num">Data (MB)</th>
+              <th scope="col">Recorded (WIB)</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+          <tfoot id="totals"></tfoot>
+        </table>
+        <p class="empty" id="empty" hidden></p>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // nginx proxies /api/* to the FastAPI container, so no CORS setup is needed.
+    const API = "/api";
+
+    // Timestamps are stored in UTC by the API; always display them in WIB.
+    const wibFormat = new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Asia/Jakarta",
+      day: "2-digit", month: "short", year: "numeric",
+      hour: "2-digit", minute: "2-digit", hour12: false,
+    });
+    const numFormat = new Intl.NumberFormat("en-US");
+
+    const $ = (id) => document.getElementById(id);
+
+    // Turns FastAPI error bodies (including 422 validation lists) into readable text.
+    async function errorText(res) {
+      try {
+        const body = await res.json();
+        if (Array.isArray(body.detail)) {
+          return body.detail.map((d) => `${d.loc.at(-1)}: ${d.msg}`).join("; ");
+        }
+        if (body.detail) return String(body.detail);
+      } catch { /* body was not JSON */ }
+      return `Request failed with status ${res.status}`;
+    }
+
+    async function checkHealth() {
+      let ok = false;
+      try {
+        ok = (await fetch(`${API}/health`)).ok;
+      } catch { /* network error means not ok */ }
+      $("status").dataset.ok = ok;
+      $("status-text").textContent = ok ? "API connected" : "API not responding";
+    }
+
+    function cell(text, className) {
+      const td = document.createElement("td");
+      if (className) td.className = className;
+      td.textContent = text; // textContent, never innerHTML: subscriberId is user input
+      return td;
+    }
+
+    function render(records, filtered) {
+      const rows = $("rows");
+      const totals = $("totals");
+      const empty = $("empty");
+      rows.replaceChildren();
+      totals.replaceChildren();
+
+      if (records.length === 0) {
+        empty.textContent = filtered
+          ? "No records match these filters."
+          : "No usage recorded yet. Use the form to add the first record.";
+        empty.hidden = false;
+        return;
+      }
+      empty.hidden = true;
+
+      const maxMB = Math.max(...records.map((r) => r.dataUsageMB)) || 1;
+
+      // Newest first
+      for (const r of [...records].reverse()) {
+        const tr = document.createElement("tr");
+        tr.append(
+          cell(r.id, "id"),
+          cell(r.subscriberId),
+          cell(numFormat.format(r.callMinutes), "num"),
+          cell(numFormat.format(r.smsCount), "num"),
+        );
+
+        const data = document.createElement("td");
+        data.className = "data";
+        const value = document.createElement("span");
+        value.className = "data-value";
+        value.textContent = numFormat.format(r.dataUsageMB);
+        const track = document.createElement("div");
+        track.className = "track";
+        const bar = document.createElement("div");
+        bar.className = "bar";
+        bar.style.width = `${(r.dataUsageMB / maxMB) * 100}%`;
+        track.append(bar);
+        data.append(value, track);
+
+        tr.append(data, cell(wibFormat.format(new Date(r.timestamp))));
+        rows.append(tr);
+      }
+
+      const sum = (key) => records.reduce((total, r) => total + r[key], 0);
+      const tr = document.createElement("tr");
+      const label = cell(`Total, ${records.length} record${records.length === 1 ? "" : "s"}`);
+      label.colSpan = 2;
+      tr.append(
+        label,
+        cell(numFormat.format(sum("callMinutes")), "num"),
+        cell(numFormat.format(sum("smsCount")), "num"),
+        cell(numFormat.format(sum("dataUsageMB")), "num"),
+        cell(""),
+      );
+      totals.append(tr);
+    }
+
+    async function loadUsages() {
+      // datetime-local values have no offset (e.g. 2026-09-23T08:00); the API treats them as WIB.
+      const params = new URLSearchParams();
+      for (const [key, value] of new FormData($("filter-form"))) {
+        if (value.trim()) params.set(key, value.trim());
+      }
+      try {
+        const res = await fetch(`${API}/usages?${params}`);
+        if (!res.ok) throw new Error(await errorText(res));
+        render(await res.json(), params.toString() !== "");
+      } catch (err) {
+        $("rows").replaceChildren();
+        $("totals").replaceChildren();
+        $("empty").textContent = `Could not load records. ${err.message}`;
+        $("empty").hidden = false;
+      }
+    }
+
+    $("usage-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const fd = new FormData(form);
+      const toNumber = (v) => (v === "" ? null : Number(v)); // empty stays null so the API rejects it
+      const payload = {
+        subscriberId: fd.get("subscriberId").trim(),
+        callMinutes: toNumber(fd.get("callMinutes")),
+        smsCount: toNumber(fd.get("smsCount")),
+        dataUsageMB: toNumber(fd.get("dataUsageMB")),
+      };
+
+      const msg = $("form-msg");
+      const button = $("submit-btn");
+      button.disabled = true;
+      msg.className = "form-msg";
+      msg.textContent = "";
+
+      try {
+        const res = await fetch(`${API}/usages`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) throw new Error(await errorText(res));
+        const record = await res.json();
+        msg.className = "form-msg ok";
+        msg.textContent = `Usage recorded for ${record.subscriberId}.`;
+        // Keep the subscriber ID for quick repeated entries; clear the numbers.
+        for (const name of ["callMinutes", "smsCount", "dataUsageMB"]) form.elements[name].value = "";
+        form.elements.callMinutes.focus();
+        await loadUsages();
+      } catch (err) {
+        msg.className = "form-msg error";
+        msg.textContent = err.message;
+      } finally {
+        button.disabled = false;
+      }
+    });
+
+    $("filter-form").addEventListener("submit", (event) => {
+      event.preventDefault();
+      loadUsages();
+    });
+
+    // The reset event fires before the fields are cleared, so reload on the next tick.
+    $("filter-form").addEventListener("reset", () => setTimeout(loadUsages, 0));
+
+    checkHealth();
+    loadUsages();
+    setInterval(checkHealth, 30000);
+  </script>
+</body>
+</html>
