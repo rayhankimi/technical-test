@@ -31,6 +31,7 @@ def create_usage(payload: UsageCreate):
         usages.append(record)
     return record
 
+
 @app.get("/usages", response_model=list[UsageRecord])
 def list_usages(
     subscriberId: str | None = None,
