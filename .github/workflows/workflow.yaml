@@ -12,13 +12,15 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      # Note : for the all dependency in this pipeline somehow didn't pass sonarcube
+      # qg until i specified full commit sha instead only using version
       - name: lint
-        uses: astral-sh/ruff-action@v3
+        uses: astral-sh/ruff-action@4919ec5cf1f49eff0871dbcea0da843445b837e6 # v3
         with:
           args: 'check --output-format=github'
 
       - name: format check
-        uses: astral-sh/ruff-action@v3
+        uses: astral-sh/ruff-action@4919ec5cf1f49eff0871dbcea0da843445b837e6 # v3
         with:
           args: 'format --check'
 
@@ -45,7 +47,7 @@ jobs:
           git push origin "${{ steps.semver.outputs.new_tag }}"
 
       - name: create release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
           tag_name: ${{ steps.semver.outputs.new_tag }}
           name: ${{ steps.semver.outputs.new_tag }}

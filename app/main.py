@@ -20,7 +20,7 @@ def health():
     return {"status": "ok"}
 
 
-@app.post("/usages")
+@app.post("/usages", response_model=UsageRecord, status_code=201)
 def create_usage(payload: UsageCreate):
 
     # to avoid race condition for id
