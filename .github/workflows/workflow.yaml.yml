@@ -1,0 +1,52 @@
+name: workflow.yaml
+on:
+  pull_request:
+    branches: [ main, dev ]
+  push:
+    branches: [ main ]
+
+jobs:
+  validation:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: lint
+        uses: astral-sh/ruff-action@v3
+        with:
+          args: 'check --output-format=github'
+
+      - name: format check
+        uses: astral-sh/ruff-action@v3
+        with:
+          args: 'format --check'
+
+      - name: validate docker build
+        run: docker build -t validate:${{ github.sha }} .
+
+  create-release:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: determine version
+        id: semver
+        run: bash .github/sc/semver.sh main
+
+      - name: create and push tag
+        run: |
+          git tag "${{ steps.semver.outputs.new_tag }}"
+          git push origin "${{ steps.semver.outputs.new_tag }}"
+
+      - name: create release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.semver.outputs.new_tag }}
+          name: ${{ steps.semver.outputs.new_tag }}
+          generate_release_notes: true
