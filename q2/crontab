@@ -1,0 +1,3 @@
+# min hour      dom mon dow  command
+0     8,12,15   *   *   *    /app/snapshot.sh >> /proc/1/fd/1 2>&1
+30    0         *   *   *    /app/cleanup.sh  >> /proc/1/fd/1 2>&1
