@@ -1,6 +1,6 @@
 FROM alpine:3.22
 
-RUN apk add --no-cache bash curl jq tzdata coreutils
+RUN apk add --no-cache bash coreutils curl jq tzdata
 
 # run on utc+7 (wib)
 ENV TZ=Asia/Jakarta
