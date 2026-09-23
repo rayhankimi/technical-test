@@ -14,3 +14,13 @@ services:
     depends_on:
       api:
         condition: service_healthy   # waits for the HEALTHCHECK in the Dockerfile
+
+  scheduler:
+    build: ./q2
+    environment:
+      TZ: Asia/Jakarta
+    volumes:
+      - ./q2/snapshots:/data/snapshots
+    depends_on:
+      api:
+        condition: service_healthy
